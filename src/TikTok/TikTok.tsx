@@ -64,28 +64,30 @@ export default function TikTok({ url }: TikTokProps) {
   }, []);
 
   useEffect(() => {
-    fetchRetry(`${TIKTOK_OEMBED_BASE_URL}?url=${url}`, {
-      retries: 3,
-      retryDelay: (attempt) => 2 ** attempt * 1000
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res && res.status_msg) throw new Error(res.status_msg);
-
-        if (!res || !res.html) throw new Error("API response doesn't look right");
-
-        const htmlString = res.html;
-
-        const tempElement = document.createElement('div');
-        tempElement.innerHTML = htmlString;
-
-        const scriptTag = tempElement.getElementsByTagName('script')[0];
-
-        setScriptSrc(scriptTag && scriptTag.src);
-        setHTML(htmlString.substr(0, htmlString.indexOf('<script')));
+    if(typeof window !== 'undefined') {
+      fetchRetry(`${TIKTOK_OEMBED_BASE_URL}?url=${url}`, {
+        retries: 3,
+        retryDelay: (attempt) => 2 ** attempt * 1000
       })
-      .catch((err) => setError(err));
-  }, [url]);
+        .then((res) => res.json())
+        .then((res) => {
+          if (res && res.status_msg) throw new Error(res.status_msg);
+  
+          if (!res || !res.html) throw new Error("API response doesn't look right");
+  
+          const htmlString = res.html;
+  
+          const tempElement = document.createElement('div');
+          tempElement.innerHTML = htmlString;
+  
+          const scriptTag = tempElement.getElementsByTagName('script')[0];
+  
+          setScriptSrc(scriptTag && scriptTag.src);
+          setHTML(htmlString.substr(0, htmlString.indexOf('<script')));
+        })
+        .catch((err) => setError(err));
+    }
+  }, [url, typeof window]);
 
   if (error) return <div>Error: {JSON.stringify(error)}</div>;
 
